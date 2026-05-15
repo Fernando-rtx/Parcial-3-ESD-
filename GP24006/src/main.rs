@@ -6,6 +6,12 @@ struct Vuelo {
 
 struct Nodo {
     vuelo: Vuelo,
+    // FASE 1 - Concepto de Box: Usamos Box<Nodo> porque Rust requiere que 
+    // todas las estructuras tengan un tamaño fijo y conocido en tiempo de compilación. 
+    // Como Nodo es una estructura recursiva (contiene otros Nodos), su tamaño 
+    // sería infinito y el compilador lo rechazaría. Al usar Box, alojamos los datos
+    // en el Heap (memoria dinámica) y la estructura solo guarda un puntero de 
+    // tamaño fijo (ej. 8 bytes) hacia esa memoria, garantizando la compilación.
     izquierdo: Option<Box<Nodo>>,
     derecho: Option<Box<Nodo>>,
     altura: i32,
@@ -39,6 +45,14 @@ fn obtener_balance(nodo: &Nodo) -> i32 {
 }
 
 fn rotar_derecha(mut y: Box<Nodo>) -> Box<Nodo> {
+    // FASE 1 - Uso de Option::take() y Ownership:
+    // Al realizar una rotación, necesitamos desenlazar un nodo de su padre 
+    // para cambiar la estructura del árbol. Rust prohíbe tener múltiples 
+    // referencias mutables o "robar" directamente una referencia.
+    // take() extrae de forma segura el valor del Option (tomando el Ownership),
+    // y deja un 'None' temporal en el nodo original, permitiendo mover 
+    // todo el subárbol sin hacer una clonación costosa ($O(N)$) y sin que el
+    // Borrow Checker genere errores.
     let mut x = y.izquierdo.take().expect("Error de radar");
     y.izquierdo = x.derecho.take();
     actualizar_altura(&mut y);
